@@ -768,6 +768,12 @@ const prefersReducedMotion = () =>
 const isTouch = () =>
   window.matchMedia("(hover: none), (pointer: coarse)").matches;
 const hasGSAP = () => typeof window.gsap !== "undefined";
+// Safely embed a JSON object inside a double-quoted HTML attribute.
+// Escaping the double quotes (rather than relying on single-quote delimiters)
+// means apostrophes in real copy — "member's", "team's" — can never break the markup.
+function escAttr(obj) {
+  return JSON.stringify(obj).replace(/"/g, "&quot;");
+}
 
 /* ==================================================
    INIT: PRELOADER
@@ -1136,7 +1142,7 @@ function markReveal(el) {
 
 function initRevealAnimations() {
   const targets = $$(
-    ".section-head, .about__grid, .value-card, .why__list-wrap, .journey .timeline-item, .contact__grid, .join__inner, .stat-card",
+    ".section-head, .about__grid, .value-card, .why__list-wrap, .journey .timeline-item, .contact__grid, .join__inner, .stat-card, .footer__top",
   );
   targets.forEach(markReveal);
   const obs = new IntersectionObserver(
@@ -1176,7 +1182,7 @@ function renderStats() {
       (s, idx) => `
     <div class="stat-card" data-reveal>
       <span class="stat-card__num"><span class="accent" data-count="${s.value}">0</span>${s.suffix}</span>
-      <span class="stat-card__label" data-lang-field='${JSON.stringify(s.label)}'>${s.label[currentLang]}</span>
+      <span class="stat-card__label" data-lang-field="${escAttr(s.label)}">${s.label[currentLang]}</span>
     </div>
   `,
     )
@@ -1225,8 +1231,8 @@ function renderValues() {
     <div class="value-card" data-reveal style="--card-accent:${v.accent}" data-tilt>
       <span class="value-card__num">0${i + 1}</span>
       <div class="value-card__icon"><i data-lucide="${v.icon}"></i></div>
-      <h3 class="value-card__title" data-lang-field='${JSON.stringify(v.title)}'>${v.title[currentLang]}</h3>
-      <p class="value-card__desc" data-lang-field='${JSON.stringify(v.desc)}'>${v.desc[currentLang]}</p>
+      <h3 class="value-card__title" data-lang-field="${escAttr(v.title)}">${v.title[currentLang]}</h3>
+      <p class="value-card__desc" data-lang-field="${escAttr(v.desc)}">${v.desc[currentLang]}</p>
     </div>
   `,
     )
@@ -1281,10 +1287,10 @@ function renderWhy() {
     <li class="why-item ${i === 0 ? "is-active" : ""}" data-index="${i}">
       <button class="why-item__trigger" aria-expanded="${i === 0}">
         <span class="num">0${i + 1}</span>
-        <span data-lang-field='${JSON.stringify(w.title)}'>${w.title[currentLang]}</span>
+        <span data-lang-field="${escAttr(w.title)}">${w.title[currentLang]}</span>
       </button>
       <div class="why-item__panel">
-        <p data-lang-field='${JSON.stringify(w.desc)}'>${w.desc[currentLang]}</p>
+        <p data-lang-field="${escAttr(w.desc)}">${w.desc[currentLang]}</p>
       </div>
     </li>
   `,
@@ -1332,29 +1338,25 @@ function initWhyInteraction() {
 function renderTimeline() {
   const list = $("#timelineList");
   if (!list) return;
-  const line = list.querySelector(".timeline__line");
-  const items = journeyData
+  list.innerHTML = journeyData
     .map(
       (j) => `
     <li class="timeline-item" data-reveal>
       <span class="timeline-item__dot"></span>
-      <p class="timeline-item__year" data-lang-field='${JSON.stringify(j.year)}'>${j.year[currentLang]}</p>
-      <h3 class="timeline-item__title" data-lang-field='${JSON.stringify(j.title)}'>${j.title[currentLang]}</h3>
-      <p class="timeline-item__desc" data-lang-field='${JSON.stringify(j.desc)}'>${j.desc[currentLang]}</p>
+      <p class="timeline-item__year" data-lang-field="${escAttr(j.year)}">${j.year[currentLang]}</p>
+      <h3 class="timeline-item__title" data-lang-field="${escAttr(j.title)}">${j.title[currentLang]}</h3>
+      <p class="timeline-item__desc" data-lang-field="${escAttr(j.desc)}">${j.desc[currentLang]}</p>
     </li>
   `,
     )
     .join("");
-  list.innerHTML = "";
-  list.appendChild(line);
-  list.insertAdjacentHTML("beforeend", items);
 }
 
 function initTimelineProgress() {
-  const timeline = $(".timeline");
+  const wrap = $(".timeline-wrap");
   const fill = $("#timelineFill");
   const items = $$(".timeline-item");
-  if (!timeline || !fill) return;
+  if (!wrap || !fill) return;
 
   const obs = new IntersectionObserver(
     (entries) => {
@@ -1367,7 +1369,7 @@ function initTimelineProgress() {
   items.forEach((i) => obs.observe(i));
 
   const update = () => {
-    const rect = timeline.getBoundingClientRect();
+    const rect = wrap.getBoundingClientRect();
     const vh = window.innerHeight;
     const total = rect.height;
     const visible = Math.min(Math.max(vh * 0.7 - rect.top, 0), total);
@@ -1387,7 +1389,7 @@ function renderTeamFilters() {
   bar.innerHTML = teamRoleFilters
     .map(
       (f) => `
-    <button class="filter-btn ${f.key === teamFilterState ? "is-active" : ""}" data-filter="${f.key}" data-lang-field='${JSON.stringify(f.label)}'>${f.label[currentLang]}</button>
+    <button class="filter-btn ${f.key === teamFilterState ? "is-active" : ""}" data-filter="${f.key}" data-lang-field="${escAttr(f.label)}">${f.label[currentLang]}</button>
   `,
     )
     .join("");
@@ -1501,7 +1503,7 @@ function renderActivityFilters() {
   bar.innerHTML = activityFilters
     .map(
       (f) => `
-    <button class="filter-btn ${f.key === activityFilterState ? "is-active" : ""}" data-filter="${f.key}" data-lang-field='${JSON.stringify(f.label)}'>${f.label[currentLang]}</button>
+    <button class="filter-btn ${f.key === activityFilterState ? "is-active" : ""}" data-filter="${f.key}" data-lang-field="${escAttr(f.label)}">${f.label[currentLang]}</button>
   `,
     )
     .join("");
@@ -1521,12 +1523,12 @@ function renderActivities() {
     <article class="activity-card">
       <div class="activity-card__media">
         <img src="${a.image}" alt="Team 0001 members during a ${a.category} activity" loading="lazy" width="480" height="300">
-        <span class="activity-card__tag" data-lang-field='${JSON.stringify({ en: a.category, hi: a.category })}'>${a.category}</span>
+        <span class="activity-card__tag" data-lang-field="${escAttr({ en: a.category, hi: a.category })}">${a.category}</span>
       </div>
       <div class="activity-card__body">
         <p class="activity-card__date">${a.date}</p>
-        <h3 class="activity-card__title" data-lang-field='${JSON.stringify(a.title)}'>${a.title[currentLang]}</h3>
-        <p class="activity-card__desc" data-lang-field='${JSON.stringify(a.desc)}'>${a.desc[currentLang]}</p>
+        <h3 class="activity-card__title" data-lang-field="${escAttr(a.title)}">${a.title[currentLang]}</h3>
+        <p class="activity-card__desc" data-lang-field="${escAttr(a.desc)}">${a.desc[currentLang]}</p>
         <a href="#contact" class="text-link" data-cursor="VIEW"><span>${t("events.details")}</span></a>
       </div>
     </article>
@@ -1577,9 +1579,9 @@ function renderEvents() {
       <article class="event-card">
         <div class="event-card__date"><span class="day">${day}</span><span class="mon">${mon}</span></div>
         <div>
-          <h3 class="event-card__title" data-lang-field='${JSON.stringify(ev.title)}'>${ev.title[currentLang]}</h3>
-          <p class="event-card__meta" data-lang-field='${JSON.stringify(ev.location)}'>${ev.location[currentLang]}</p>
-          <p class="event-card__desc" data-lang-field='${JSON.stringify(ev.desc)}'>${ev.desc[currentLang]}</p>
+          <h3 class="event-card__title" data-lang-field="${escAttr(ev.title)}">${ev.title[currentLang]}</h3>
+          <p class="event-card__meta" data-lang-field="${escAttr(ev.location)}">${ev.location[currentLang]}</p>
+          <p class="event-card__desc" data-lang-field="${escAttr(ev.desc)}">${ev.desc[currentLang]}</p>
           ${left > 0 ? `<p class="event-card__countdown">${left} ${t("events.daysLeft")}</p>` : ""}
         </div>
       </article>`;
@@ -1596,7 +1598,7 @@ function renderEvents() {
         <div class="event-past-card__media"><img src="${ev.image}" alt="Team 0001 past event: ${ev.title[currentLang]}" loading="lazy" width="300" height="225"></div>
         <div class="event-past-card__body">
           <p class="event-past-card__date">${ev.date}</p>
-          <h3 class="event-past-card__title" data-lang-field='${JSON.stringify(ev.title)}'>${ev.title[currentLang]}</h3>
+          <h3 class="event-past-card__title" data-lang-field="${escAttr(ev.title)}">${ev.title[currentLang]}</h3>
           <a href="#gallery" class="text-link" data-cursor="VIEW"><span>${t("events.details")}</span></a>
         </div>
       </article>
@@ -1617,8 +1619,8 @@ function renderAchievements() {
       (a) => `
     <div class="achievement-card">
       <div class="achievement-card__icon"><i data-lucide="${a.icon}"></i></div>
-      <h3 class="achievement-card__title" data-lang-field='${JSON.stringify(a.title)}'>${a.title[currentLang]}</h3>
-      <p class="achievement-card__desc" data-lang-field='${JSON.stringify(a.desc)}'>${a.desc[currentLang]}</p>
+      <h3 class="achievement-card__title" data-lang-field="${escAttr(a.title)}">${a.title[currentLang]}</h3>
+      <p class="achievement-card__desc" data-lang-field="${escAttr(a.desc)}">${a.desc[currentLang]}</p>
       <p class="achievement-card__year">${a.year}</p>
     </div>
   `,
@@ -1640,7 +1642,7 @@ function renderGalleryFilters() {
   bar.innerHTML = galleryFilters
     .map(
       (f) => `
-    <button class="filter-btn ${f.key === galleryFilterState ? "is-active" : ""}" data-filter="${f.key}" data-lang-field='${JSON.stringify(f.label)}'>${f.label[currentLang]}</button>
+    <button class="filter-btn ${f.key === galleryFilterState ? "is-active" : ""}" data-filter="${f.key}" data-lang-field="${escAttr(f.label)}">${f.label[currentLang]}</button>
   `,
     )
     .join("");
@@ -1659,7 +1661,7 @@ function renderGallery() {
       (g, i) => `
     <figure class="gallery-item" data-index="${i}" tabindex="0" role="button" aria-label="Open image: ${g.title[currentLang]}">
       <img src="${g.image}" alt="${g.title[currentLang]} — Team 0001 gallery" loading="lazy" width="400" height="300">
-      <div class="gallery-item__overlay"><span data-lang-field='${JSON.stringify(g.title)}'>${g.title[currentLang]}</span></div>
+      <div class="gallery-item__overlay"><span data-lang-field="${escAttr(g.title)}">${g.title[currentLang]}</span></div>
     </figure>
   `,
     )
@@ -1764,11 +1766,11 @@ function renderAnnouncements() {
       (a) => `
     <article class="announcement-card ${a.featured ? "announcement-card--featured" : ""}">
       <div class="announcement-card__top">
-        <span class="announcement-card__cat" data-lang-field='${JSON.stringify(a.category)}'>${a.category[currentLang]}</span>
+        <span class="announcement-card__cat" data-lang-field="${escAttr(a.category)}">${a.category[currentLang]}</span>
         <span>${a.date}</span>
       </div>
-      <h3 class="announcement-card__title" data-lang-field='${JSON.stringify(a.title)}'>${a.title[currentLang]}</h3>
-      <p class="announcement-card__desc" data-lang-field='${JSON.stringify(a.desc)}'>${a.desc[currentLang]}</p>
+      <h3 class="announcement-card__title" data-lang-field="${escAttr(a.title)}">${a.title[currentLang]}</h3>
+      <p class="announcement-card__desc" data-lang-field="${escAttr(a.desc)}">${a.desc[currentLang]}</p>
       <a href="#contact" class="text-link" data-cursor="VIEW"><span data-i18n="announcements.readMore">${t("announcements.readMore")}</span></a>
     </article>
   `,
@@ -1876,6 +1878,8 @@ function applyStaticTranslations() {
   });
 }
 
+let hasRenderedOnce = false;
+
 function setLanguage(lang) {
   if (lang !== "en" && lang !== "hi") return;
   currentLang = lang;
@@ -1892,8 +1896,12 @@ function setLanguage(lang) {
     });
   });
 
+  // The very first render must happen synchronously — later code (reveal
+  // observers, timeline progress tracking) queries the DOM for cards/items
+  // right after this call returns, so they need to already exist.
+  // Only fade for language switches that happen after that first render.
   const fade = (fn) => {
-    if (hasGSAP() && !prefersReducedMotion()) {
+    if (hasRenderedOnce && hasGSAP() && !prefersReducedMotion()) {
       gsap.to("main, footer", {
         opacity: 0,
         y: 4,
@@ -1906,6 +1914,7 @@ function setLanguage(lang) {
     } else {
       fn();
     }
+    hasRenderedOnce = true;
   };
 
   fade(() => {
@@ -1939,6 +1948,68 @@ function initLanguageSwitcher() {
   });
   const saved = localStorage.getItem("team0001-language");
   setLanguage(saved === "hi" ? "hi" : "en");
+}
+
+/* ==================================================
+   INIT: BACK TO TOP
+================================================== */
+function initBackToTop() {
+  const btn = $("#backToTop");
+  if (!btn) return;
+  window.addEventListener(
+    "scroll",
+    () => {
+      btn.classList.toggle("is-visible", window.scrollY > 600);
+    },
+    { passive: true },
+  );
+  btn.addEventListener("click", () => {
+    if (lenisInstance) lenisInstance.scrollTo(0, { duration: 1.2 });
+    else
+      window.scrollTo({
+        top: 0,
+        behavior: prefersReducedMotion() ? "auto" : "smooth",
+      });
+  });
+}
+
+/* ==================================================
+   INIT: IMAGE SKELETON + ERROR FALLBACK
+   Marks every image as loading (shimmer) until it decodes, and swaps in a
+   graceful placeholder instead of a broken-image icon if it fails to load.
+   Runs on a delay + MutationObserver since most images are injected by the
+   data-driven renderers rather than present at initial parse time.
+================================================== */
+function wireImage(img) {
+  if (img.dataset.imgWired) return;
+  img.dataset.imgWired = "1";
+  if (img.complete && img.naturalWidth > 0) return; // already loaded
+  img.setAttribute("data-img-loading", "");
+  img.addEventListener("load", () => img.removeAttribute("data-img-loading"), {
+    once: true,
+  });
+  img.addEventListener(
+    "error",
+    () => {
+      img.removeAttribute("data-img-loading");
+      img.setAttribute("data-img-fallback", "");
+      img.src = "assets/team0001-logo.png";
+    },
+    { once: true },
+  );
+}
+function initImageFallbacks() {
+  $$("img").forEach(wireImage);
+  const obs = new MutationObserver((mutations) => {
+    mutations.forEach((m) => {
+      m.addedNodes.forEach((node) => {
+        if (node.nodeType !== 1) return;
+        if (node.tagName === "IMG") wireImage(node);
+        else $$("img", node).forEach(wireImage);
+      });
+    });
+  });
+  obs.observe(document.body, { childList: true, subtree: true });
 }
 
 /* ==================================================
@@ -1999,11 +2070,6 @@ document.addEventListener("DOMContentLoaded", () => {
     console.error(e);
   }
   try {
-    initTimelineProgress();
-  } catch (e) {
-    console.error(e);
-  }
-  try {
     initTeam();
   } catch (e) {
     console.error(e);
@@ -2038,6 +2104,10 @@ document.addEventListener("DOMContentLoaded", () => {
   } catch (e) {
     console.error(e);
   }
+  // Language switcher renders the first pass of all dynamic content
+  // (stats, values, why, timeline, team, activities, events, achievements,
+  // gallery, announcements) synchronously. Anything that needs to query
+  // that rendered DOM — reveal observers, timeline progress — must run after.
   try {
     initLanguageSwitcher();
   } catch (e) {
@@ -2045,6 +2115,21 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   try {
     initRevealAnimations();
+  } catch (e) {
+    console.error(e);
+  }
+  try {
+    initTimelineProgress();
+  } catch (e) {
+    console.error(e);
+  }
+  try {
+    initBackToTop();
+  } catch (e) {
+    console.error(e);
+  }
+  try {
+    initImageFallbacks();
   } catch (e) {
     console.error(e);
   }
