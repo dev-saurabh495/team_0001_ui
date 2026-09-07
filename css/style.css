@@ -1101,10 +1101,12 @@ body.has-custom-cursor button {
   padding: 130px 0;
   background: var(--color-bg-alt);
 }
-.timeline {
+.timeline-wrap {
   position: relative;
   max-width: 760px;
   margin-inline: auto;
+}
+.timeline {
   padding-left: 40px;
 }
 .timeline__line {
@@ -2036,6 +2038,68 @@ body.has-custom-cursor button {
 }
 .lightbox__nav--next {
   right: 24px;
+}
+
+/* ---------- BACK TO TOP ---------- */
+.back-to-top {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 500;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-white);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px);
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast),
+    visibility var(--transition-fast),
+    border-color var(--transition-fast);
+}
+.back-to-top.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.back-to-top:hover {
+  border-color: rgba(255, 157, 0, 0.5);
+  color: var(--color-orange);
+}
+
+/* ---------- IMAGE SKELETON / FALLBACK ---------- */
+img[data-img-loading] {
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.03) 30%,
+    rgba(255, 255, 255, 0.07) 50%,
+    rgba(255, 255, 255, 0.03) 70%
+  );
+  background-size: 200% 100%;
+  animation: imgShimmer 1.5s ease-in-out infinite;
+}
+@keyframes imgShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+img[data-img-fallback] {
+  background: linear-gradient(160deg, #171b26, #0a0d14);
+  object-fit: contain !important;
+  padding: 18%;
+}
+@media (prefers-reduced-motion: reduce) {
+  img[data-img-loading] {
+    animation: none;
+  }
 }
 
 /* ---------- REVEAL UTILITIES ---------- */
